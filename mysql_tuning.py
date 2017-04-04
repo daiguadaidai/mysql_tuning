@@ -3,12 +3,13 @@ import datetime
 import getopt
 import sys
 import pprint
-from warnings import filterwarnings
+import string
 import MySQLdb
 import ConfigParser
 import sqlparse
 from sqlparse.sql import IdentifierList, Identifier
 from sqlparse.tokens import Keyword, DML
+from warnings import filterwarnings
 
 filterwarnings('ignore', category = MySQLdb.Warning)
 
@@ -106,7 +107,7 @@ def f_find_in_list(myList,value):
         return 0
 
 def f_get_parm(p_dbinfo):
-    db = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
+    conn = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
     cursor = conn.cursor()
     cursor.execute("select lower(variable_name),variable_value from INFORMATION_SCHEMA.GLOBAL_VARIABLES where upper(variable_name) in ('"+"','".join(list(SYS_PARM_FILTER))+"') order by variable_name")
     records = cursor.fetchall()
@@ -140,8 +141,8 @@ def f_print_parm(p_parm_result):
 
 def f_print_optimizer_switch(p_dbinfo):
     print "===== OPTIMIZER SWITCH ====="
-    db = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
-    cursor = db.cursor()
+    conn = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
+    cursor = conn.cursor()
     cursor.execute("select variable_value from INFORMATION_SCHEMA.GLOBAL_VARIABLES where upper(variable_name)='OPTIMIZER_SWITCH'")
     rows = cursor.fetchall()
     print "+------------------------------------------+------------+"
@@ -153,12 +154,12 @@ def f_print_optimizer_switch(p_dbinfo):
         print seq3,row.split('=')[1].rjust(10),seq3
     print "+------------------------------------------+------------+"
     cursor.close()
-    db.close()
+    conn.close()
     print
 
 def f_exec_sql(p_dbinfo,p_sqltext,p_option):
     results={}
-    db = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
+    conn = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
     cursor = conn.cursor()
 
     if f_find_in_list(p_option,'PROFILING'):
@@ -431,6 +432,7 @@ def f_print_indexinfo(p_dbinfo,p_tablename):
     db.close()
 
 def f_get_mysql_version(p_dbinfo):
+    print p_dbinfo
     db = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
     cursor = db.cursor()
     cursor.execute("select @@version")
@@ -446,18 +448,20 @@ def f_print_title(p_dbinfo,p_mysql_version,p_sqltext):
 
     print 
     print "===== BASIC INFORMATION ====="
-    title=('server_ip','user_name','db_name','db_version')
-    print "+----------------------+------------+------------+------------+"
+    title=('server_ip', 'user_name', 'db_name', 'port', 'db_version')
+    print "+----------------------+------------+------------+------------+------------+"
     print seq3,title[0].center(20),
     print seq3,title[1].center(10),
     print seq3,title[2].center(10),
-    print seq3,title[3].center(10),seq3
-    print "+----------------------+------------+------------+------------+"
+    print seq3,title[3].center(10),
+    print seq3,title[4].center(10),seq3
+    print "+----------------------+------------+------------+------------+------------+"
     print seq3,p_dbinfo[0].center(20),
     print seq3,p_dbinfo[1].center(10),
     print seq3,p_dbinfo[2].center(10),
+    print seq3,p_dbinfo[4].center(10),
     print seq3,p_mysql_version.center(10),seq3
-    print "+----------------------+------------+------------+------------+"
+    print "+----------------------+------------+------------+------------+------------+"
     print
     print "===== ORIGINAL SQL TEXT ====="
     print sqlparse.format(p_sqltext,reindent=True, keyword_case='upper')
@@ -518,7 +522,7 @@ def timediff(timestart, timestop):
         return retstr
 
 if __name__=="__main__":
-    dbinfo=["","","",""]  #dbhost,dbuser,dbpwd,dbname
+    dbinfo=["", "", "", "", ""]  # dbhost, dbuser, dbpwd, dbname, dbport
     sqltext=""
     option=[]
     config_file=""
@@ -533,10 +537,11 @@ if __name__=="__main__":
 
     config = ConfigParser.ConfigParser()
     config.readfp(open(config_file,"rb"))
-    dbinfo[0] = config.get("database","server_ip")
-    dbinfo[1] = config.get("database","db_user")
-    dbinfo[2] = config.get("database","db_pwd")
-    dbinfo[3] = config.get("database","db_name")
+    dbinfo[0] = config.get("database", "server_ip")
+    dbinfo[1] = config.get("database", "db_user")
+    dbinfo[2] = config.get("database", "db_pwd")
+    dbinfo[3] = config.get("database", "db_name")
+    dbinfo[4] = config.get("database", "db_port")
 
     mysql_version = f_get_mysql_version(dbinfo)
     
