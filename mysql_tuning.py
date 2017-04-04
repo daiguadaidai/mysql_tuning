@@ -124,7 +124,7 @@ def f_print_parm(p_parm_result):
     print "+--------------------------------+------------------------------------------------------------+"
 
     for row in p_parm_result:
-	print seq3,row[0].ljust(30),
+        print seq3,row[0].ljust(30),
         if 'size' in row[0]:
             if string.atoi(row[1])>=1024*1024*1024:
                 print seq3,(str(round(string.atoi(row[1])/1024/1024/1024,2))+' G').rjust(58),seq3
@@ -309,7 +309,7 @@ def f_print_sqlplan(p_sqlplan,p_warning):
     print seq3,plan_title[10].center(10),seq3
     print "+--------+------------------+------------+------------+----------------------+------------+------------+------------+------------+------------+------------+"
     for row in p_sqlplan:
-        print seq3,str(row[0]).rjust(6),		              # id
+        print seq3,str(row[0]).rjust(6),                      # id
         print seq3,row[1].ljust(16),                    # select_type
         print seq3,row[2].ljust(10),                    # table
         print seq3,row[3].ljust(10),                    # type
@@ -432,7 +432,6 @@ def f_print_indexinfo(p_dbinfo,p_tablename):
     db.close()
 
 def f_get_mysql_version(p_dbinfo):
-    print p_dbinfo
     db = MySQLdb.connect(host=p_dbinfo[0], user=p_dbinfo[1], passwd=p_dbinfo[2],db=p_dbinfo[3],port=int(p_dbinfo[4]))
     cursor = db.cursor()
     cursor.execute("select @@version")
@@ -508,18 +507,18 @@ def f_print_table(p_value,p_option):  #p_option "(key-n => title,max_len,align_v
 '''
 
 def timediff(timestart, timestop):
-        t  = (timestop-timestart)
-        time_day = t.days
-        s_time = t.seconds
-        ms_time = t.microseconds / 1000000
-        usedtime = int(s_time + ms_time)
-        time_hour = usedtime / 60 / 60
-        time_minute = (usedtime - time_hour * 3600 ) / 60
-        time_second =  usedtime - time_hour * 3600 - time_minute * 60
-        time_micsecond = (t.microseconds - t.microseconds / 1000000) / 1000
-
-        retstr = "%d day %d hour %d minute %d second %d microsecond "  %(time_day, time_hour, time_minute, time_second, time_micsecond)
-        return retstr
+    t  = (timestop-timestart)
+    time_day = t.days
+    s_time = t.seconds
+    ms_time = t.microseconds / 1000000
+    usedtime = int(s_time + ms_time)
+    time_hour = usedtime / 60 / 60
+    time_minute = (usedtime - time_hour * 3600 ) / 60
+    time_second =  usedtime - time_hour * 3600 - time_minute * 60
+    time_micsecond = (t.microseconds - t.microseconds / 1000000) / 1000
+    
+    retstr = "%d day %d hour %d minute %d second %d microsecond "  %(time_day, time_hour, time_minute, time_second, time_micsecond)
+    return retstr
 
 if __name__=="__main__":
     dbinfo=["", "", "", "", ""]  # dbhost, dbuser, dbpwd, dbname, dbport
